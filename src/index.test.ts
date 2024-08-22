@@ -43,11 +43,11 @@ test('Simple Flow', async () => {
   expect(countCallback).toHaveBeenCalledWith(5)
 
   expect(dataCallback).toHaveBeenCalledTimes(5)
-  expect(dataCallback).toHaveBeenNthCalledWith(1,1)
-  expect(dataCallback).toHaveBeenNthCalledWith(2,2)
-  expect(dataCallback).toHaveBeenNthCalledWith(3,3)
-  expect(dataCallback).toHaveBeenNthCalledWith(4,4)
-  expect(dataCallback).toHaveBeenNthCalledWith(5,5)
+  expect(dataCallback).toHaveBeenNthCalledWith(1, 1)
+  expect(dataCallback).toHaveBeenNthCalledWith(2, 2)
+  expect(dataCallback).toHaveBeenNthCalledWith(3, 3)
+  expect(dataCallback).toHaveBeenNthCalledWith(4, 4)
+  expect(dataCallback).toHaveBeenNthCalledWith(5, 5)
 
   expect(squaredCallback).toHaveBeenCalledTimes(15)
   expect(squaredCallback).toHaveBeenCalledWith(1)

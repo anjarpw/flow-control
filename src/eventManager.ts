@@ -1,43 +1,62 @@
-import { IEventCore, IStorage, ITool, IToolGenerator, KeysOfType, Process, ProcessMap, ValueOf } from "./contracts"
+import { IEventCore, IStorage, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "./contracts"
 import { Tool } from "./tool"
 export type EventManagerCreationParams<TEventCollection> = {
     storage: IStorage
-    core: IEventCore<TEventCollection>
+    core: IEventCore
 }
-export function generateEventManager<TEventCollection>(params: EventManagerCreationParams<TEventCollection>): EventManager<TEventCollection> {
+export function generateEventManager<TEventCollection extends Record<string, any>>(params: EventManagerCreationParams<TEventCollection>): EventManager<TEventCollection> {
     const { core, storage } = params
     const tool = new Tool(core, storage)
-    return new EventManager(core, tool)
+    return new EventManager(core, tool, new ProcessCollector())
 }
 
-class EventManager<TEventCollection> {
-    private tool: ITool<TEventCollection>
-    private processes: ProcessMap<TEventCollection>
-    protected core: IEventCore<TEventCollection>
+class ProcessCollector<TEventCollection> {
+    private processMap: ProcessMap<TEventCollection>
 
-    constructor(core: IEventCore<TEventCollection>, tool: ITool<TEventCollection>) {
+    constructor() {
+        this.processMap = {}
+    }
+
+    public runProcess<TInput extends ValueOf<TEventCollection>>(key: KeysOfType<TEventCollection, TInput>, input: TInput, tool: ITool) {
+        const events = this.processMap[key] as Process<TEventCollection, TInput>[]
+        events.forEach(e => {
+            e(input, tool);
+        })
+    }
+    public register<TInput extends ValueOf<TEventCollection>>(key: KeysOfType<TEventCollection, TInput>, process: Process<TEventCollection, TInput>) {
+        if (!this.processMap[key]) {
+            this.processMap[key] = []
+        }
+        (this.processMap[key] as Process<TEventCollection, TInput>[]).push(process)
+    }
+
+}
+
+
+class EventManager<TEventCollection extends Record<string, any>> {
+    private tool: ITool
+    protected core: IEventCore
+    processCollector: ProcessCollector<TEventCollection>
+
+    constructor(core: IEventCore, tool: ITool, processCollector: ProcessCollector<TEventCollection>) {
         this.core = core
         this.tool = tool
-        this.processes = {}
+        this.processCollector = processCollector
         core.registerCallback((key: keyof TEventCollection, input: ValueOf<TEventCollection>) => this.handleEvent(key, input))
     }
 
     private async handleEvent<TInput extends ValueOf<TEventCollection>>(key: KeysOfType<TEventCollection, TInput>, input: TInput) {
-        const events = this.processes[key] as Process<TEventCollection, TInput>[]
-        events.forEach(e => {
-            e(input, this.tool);
+        this.processCollector.runProcess(key, input, this.tool)
+    }
+
+    on<TInput extends ValueOf<TEventCollection>>(keys: Array<KeysOfType<TEventCollection, TInput>>, process: Process<TEventCollection, TInput>) {
+        this.core.registerEventKeys(keys as string[])
+        keys.forEach(key => {
+            this.processCollector.register(key, process)
         })
     }
 
-    public on<TInput extends ValueOf<TEventCollection>>(keys: Array<KeysOfType<TEventCollection, TInput>>, process: Process<TEventCollection, TInput>) {
-        keys.forEach((key: KeysOfType<TEventCollection, TInput>) => {
-            if (!this.processes[key]) {
-                this.processes[key] = []
-            }
-            (this.processes[key] as Process<TEventCollection, TInput>[]).push(process)
-        })
-    }
     public trigger<TInput extends ValueOf<TEventCollection>>(key: KeysOfType<TEventCollection, TInput>, input: TInput) {
-        this.core.trigger(key, input);
+        this.core.trigger(key as string, input);
     }
 }

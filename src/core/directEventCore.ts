@@ -1,16 +1,19 @@
 import { IEventCore, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "../contracts"
 
-export class DirectEventCore<TEventCollection> implements IEventCore<TEventCollection> {
-    private callbacks: Array<(key: keyof TEventCollection, input: ValueOf<TEventCollection>) => Promise<void>>
+export class DirectEventCore implements IEventCore {
+    private callback: (key: string, input: any) => Promise<void>
 
     constructor() {
-        this.callbacks = []
+        this.callback = async (key, value) => { }
     }
-    registerCallback(callback: (key: keyof TEventCollection, input: ValueOf<TEventCollection>) => Promise<void>): void{
-        this.callbacks.push(callback)        
+    registerEventKeys(keys: string[]): void {
     }
 
-    async trigger<TInput extends ValueOf<TEventCollection>>(key: KeysOfType<TEventCollection, TInput>, input: TInput): Promise<void> {
-        await Promise.all(this.callbacks.map(callback => callback(key, input)))
+    registerCallback(callback: (key: string, input: any) => Promise<void>): void {
+        this.callback = callback
+    }
+
+    async trigger(key: string, input: any): Promise<void> {
+        await this.callback(key, input)
     }
 }
