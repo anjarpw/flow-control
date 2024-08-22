@@ -39,17 +39,23 @@ export class RabbitMQService {
 
 export class EventCore extends BaseEventCore implements IEventCore {
     private rabbitMQService: RabbitMQService;
+    private registeredKeys: string[]
 
     constructor(rabbitMQService: RabbitMQService) {
         super()
+        this.registeredKeys = []
         this.rabbitMQService = rabbitMQService;
     }
 
     async registerEventKeys(keys: string[]): Promise<void> {
         for (const key of keys) {
+            if(this.registeredKeys.find(x => x === key)){
+                return
+            }
             await this.rabbitMQService.consume(key, async (message) => {
-                await this.handleEvent(key, message);
+                await this.callback(key, message);
             });
+            this.registeredKeys.push(key)
         }
     }
 
@@ -57,7 +63,4 @@ export class EventCore extends BaseEventCore implements IEventCore {
         await this.rabbitMQService.publish(key, input);
     }
 
-    private async handleEvent(key: string, message: any): Promise<void> {
-        console.log(`Event received for ${key}:`, message);
-    }
 }
