@@ -1,23 +1,23 @@
 import { Subject, Subscription } from 'rxjs';
 import { BaseEventCore } from './baseEventCore';
-import { IEventCore } from '../contracts';
+import { IEventCallbackRegistration, IEventCore } from '../contracts';
 
 export class SingleRxjsSubcriptionPerSubject {
     private subject: Subject<any>;
     subscription: Subscription;
-    constructor(callback: (input: any) => void){
+    constructor(callback: (input: any) => void) {
         this.subject = new Subject<any>();
         this.subscription = this.subject.subscribe(callback);
     }
-    public next(input: any){
+    public next(input: any) {
         this.subject.next(input);
     }
-    public unsubscribe(){
+    public unsubscribe() {
         this.subscription.unsubscribe()
     }
 }
 
-export class RxjsEventCore extends BaseEventCore implements IEventCore {
+export class RxjsEventCore extends BaseEventCore implements IEventCore, IEventCallbackRegistration {
     private subscriptionMap: Record<string, SingleRxjsSubcriptionPerSubject> = {}
 
     constructor() {

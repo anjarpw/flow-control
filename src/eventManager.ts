@@ -1,8 +1,8 @@
-import { IEventCore, IStorage, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "./contracts"
+import { IEventCallbackRegistration, IEventCore, IStorage, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "./contracts"
 import { Tool } from "./tool"
 export type EventManagerCreationParams<TEventCollection> = {
     storage: IStorage
-    core: IEventCore
+    core: IEventCore & IEventCallbackRegistration
 }
 export function generateEventManager<TEventCollection extends Record<string, any>>(params: EventManagerCreationParams<TEventCollection>): EventManager<TEventCollection> {
     const { core, storage } = params
@@ -35,10 +35,10 @@ class ProcessCollector<TEventCollection> {
 
 class EventManager<TEventCollection extends Record<string, any>> {
     private tool: ITool
-    protected core: IEventCore
+    protected core: IEventCore & IEventCallbackRegistration
     processCollector: ProcessCollector<TEventCollection>
 
-    constructor(core: IEventCore, tool: ITool, processCollector: ProcessCollector<TEventCollection>) {
+    constructor(core: IEventCore & IEventCallbackRegistration, tool: ITool, processCollector: ProcessCollector<TEventCollection>) {
         this.core = core
         this.tool = tool
         this.processCollector = processCollector

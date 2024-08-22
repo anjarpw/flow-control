@@ -1,7 +1,7 @@
 import { IStorage } from "../contracts";
 
 export class InMemoryStorage implements IStorage{
-    memory: Record<string | number, any>
+    protected memory: Record<string | number, any>
     constructor(){
         this.memory = {}
     }

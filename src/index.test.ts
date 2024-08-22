@@ -1,8 +1,8 @@
-import { Tool } from './tool';
+
 import { DirectEventCore } from './core/directEventCore';
 import { InMemoryStorage } from './storage/inMemoryStorage';
 import { generateEventManager } from './eventManager';
-
+import { delayTime } from '.';
 
 test('Simple Flow', async () => {
   const directEventCore = new DirectEventCore()
@@ -19,26 +19,40 @@ test('Simple Flow', async () => {
     storage: inMemoryStorage
   })
 
-  const countCallback = jest.fn();
-  const dataCallback = jest.fn();
-  const squaredCallback = jest.fn();
+  const countCallback = jest.fn(x => console.log("count", x));
+  const dataCallback = jest.fn(x => console.log("data", x));
+  const squaredCallback = jest.fn(x => console.log("squared", x));
 
   eventManager.on<number>(['count'], async (count, tool) => {
-    countCallback(count)
+    countCallback(count)    
+    await tool.getStorage().set(`history`, [`count_${count}`])
+
     for (let i = 1; i <= count; i++) {
       tool.emit('data', i)
     }
   })
   eventManager.on<number>(['data'], async (data, tool) => {
     dataCallback(data)
+    const history: string[] = await tool.getStorage().get<string[]>('history')
+    history.push(`data_${data}`)
+    await tool.getStorage().set(`history`, history)
     for (let i = 1; i <= data; i++) {
       tool.emit('squared', i * i)
     }
   })
-  eventManager.on<number>(['squared'], async (data, tool) => {
-    squaredCallback(data)
+  eventManager.on<number>(['squared'], async (squared, tool) => {
+    squaredCallback(squared)
+    const history: string[] = await tool.getStorage().get<string[]>('history')
+    history.push(`squared${squared}`)
+    await tool.getStorage().set(`history`, history)
   })
+
   eventManager.trigger<number>('count', 5)
+
+  await delayTime(100)
+  const finalHistory = await inMemoryStorage.get('history')
+  console.log(finalHistory)  
+   
   expect(countCallback).toHaveBeenCalledTimes(1)
   expect(countCallback).toHaveBeenCalledWith(5)
 
@@ -57,3 +71,4 @@ test('Simple Flow', async () => {
   expect(squaredCallback).toHaveBeenCalledWith(25)
 
 });
+

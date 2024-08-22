@@ -1,7 +1,7 @@
-import { IEventCore, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "../contracts"
+import { IEventCallbackRegistration, IEventCore, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "../contracts"
 import { BaseEventCore } from "./baseEventCore"
 
-export class DirectEventCore extends BaseEventCore implements IEventCore {
+export class DirectEventCore extends BaseEventCore implements IEventCore, IEventCallbackRegistration {
  
     constructor() {
         super()

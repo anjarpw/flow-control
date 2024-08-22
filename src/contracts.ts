@@ -15,9 +15,12 @@ export interface ITool {
   getStorage(): IStorage
 }
 
+export interface IEventCallbackRegistration {
+  registerCallback(callback: (key: string, input: any) => Promise<void>): void;
+}
+
 export interface IEventCore {
   registerEventKeys(keys: string[]): void;  
-  registerCallback(callback: (key: string, input: any) => Promise<void>): void;
   trigger(key: string, input: any): Promise<void>;
 }
 export interface IStorage {

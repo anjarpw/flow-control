@@ -1,6 +1,6 @@
-import { IEventCore, ITool, KeysOfType, Process, ProcessMap, ValueOf } from "../contracts"
+import { IEventCore, ITool, KeysOfType, Process, ProcessMap, ValueOf, IEventCallbackRegistration } from '../contracts';
 
-export abstract class BaseEventCore implements IEventCore {
+export abstract class BaseEventCore implements IEventCore, IEventCallbackRegistration {
     protected callback: (key: string, input: any) => Promise<void>
 
     constructor() {
@@ -12,4 +12,6 @@ export abstract class BaseEventCore implements IEventCore {
     abstract registerEventKeys(keys: string[]): void;
     abstract trigger(key: string, input: any): Promise<void>;
 }
+
+
 

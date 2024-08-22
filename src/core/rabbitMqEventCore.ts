@@ -1,8 +1,8 @@
 import * as amqp from 'amqplib';
 import { BaseEventCore } from './baseEventCore';
-import { IEventCore } from '../contracts';
+import { IEventCallbackRegistration, IEventCore } from '../contracts';
 
-export class RabbitMQService {
+export class RabbitMqService {
     private connection?: amqp.Connection;
     private channel?: amqp.Channel;
 
@@ -37,22 +37,22 @@ export class RabbitMQService {
 
 
 
-export class EventCore extends BaseEventCore implements IEventCore {
-    private rabbitMQService: RabbitMQService;
+export class RabbitMqEventCore extends BaseEventCore implements IEventCore, IEventCallbackRegistration {
+    private rabbitMqService: RabbitMqService;
     private registeredKeys: string[]
 
-    constructor(rabbitMQService: RabbitMQService) {
+    constructor(rabbitMQService: RabbitMqService) {
         super()
         this.registeredKeys = []
-        this.rabbitMQService = rabbitMQService;
+        this.rabbitMqService = rabbitMQService;
     }
 
     async registerEventKeys(keys: string[]): Promise<void> {
         for (const key of keys) {
-            if(this.registeredKeys.find(x => x === key)){
+            if (this.registeredKeys.find(x => x === key)) {
                 return
             }
-            await this.rabbitMQService.consume(key, async (message) => {
+            await this.rabbitMqService.consume(key, async (message) => {
                 await this.callback(key, message);
             });
             this.registeredKeys.push(key)
@@ -60,7 +60,7 @@ export class EventCore extends BaseEventCore implements IEventCore {
     }
 
     async trigger(key: string, input: any): Promise<void> {
-        await this.rabbitMQService.publish(key, input);
+        await this.rabbitMqService.publish(key, input);
     }
 
 }
